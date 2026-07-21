@@ -152,6 +152,27 @@
     color: var(--ember-soft);
     text-shadow: 2px 2px 0 #000, 0 0 18px rgba(255,122,47,0.35);
   }
+  #bgm-toggle {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 60;
+    background: #0e0b12;
+    border: 2px solid var(--card-edge);
+    box-shadow: 0 0 0 2px #000;
+    color: var(--ember-soft);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 8px 11px;
+    cursor: pointer;
+  }
+  #bgm-toggle:hover {
+    border-color: var(--ember);
+    color: var(--text);
+  }
   .ember-particle {
     position: fixed;
     bottom: -10px;
@@ -173,6 +194,9 @@
 </style>
 </head>
 <body>
+
+<audio id="bgm" src="firelink-shrine.mp3" loop preload="auto"></audio>
+<button id="bgm-toggle" aria-label="Toggle music">♪ Sound off</button>
 
 <header>
   <canvas id="bonfire" width="24" height="24" aria-label="Bonfire"></canvas>
@@ -606,6 +630,34 @@ function tick() {
 }
 tick();
 setInterval(tick, 480);
+
+// background music: attempt autoplay, fall back to first interaction,
+// and give the visitor a mute toggle
+const bgm = document.getElementById("bgm");
+const bgmToggle = document.getElementById("bgm-toggle");
+bgm.volume = 0.45;
+
+function updateBgmLabel() {
+  bgmToggle.textContent = bgm.paused ? "♪ Sound off" : "♪ Sound on";
+}
+bgm.addEventListener("play", updateBgmLabel);
+bgm.addEventListener("pause", updateBgmLabel);
+async function tryPlayBgm() {
+  try { await bgm.play(); } catch (e) { /* autoplay blocked until interaction */ }
+  updateBgmLabel();
+}
+bgmToggle.addEventListener("click", (e) => {
+  e.stopPropagation();
+  if (bgm.paused) { tryPlayBgm(); } else { bgm.pause(); updateBgmLabel(); }
+});
+const bgmKickstart = () => {
+  if (bgm.paused) tryPlayBgm();
+  window.removeEventListener("pointerdown", bgmKickstart);
+  window.removeEventListener("keydown", bgmKickstart);
+};
+window.addEventListener("pointerdown", bgmKickstart);
+window.addEventListener("keydown", bgmKickstart);
+tryPlayBgm();
 
 // floating embers
 for (let i = 0; i < 14; i++) {
