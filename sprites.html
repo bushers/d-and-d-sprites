@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dark Souls – Re-link the Fire · The Party</title>
+<style>
+  :root {
+    --bg: #0d0b10;
+    --bg2: #17131d;
+    --card: #1c1722;
+    --card-edge: #352b3f;
+    --ember: #ff7a2f;
+    --ember-soft: #ffb066;
+    --text: #e8e0d0;
+    --text-dim: #9a8fa5;
+    --gold: #d9b64a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, #2a1f33 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 50% 110%, #331b10 0%, transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: "Courier New", ui-monospace, monospace;
+    min-height: 100%;
+    overflow-x: hidden;
+    padding-bottom: 60px;
+  }
+  /* subtle CRT scanlines */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.00) 0px,
+      rgba(0,0,0,0.00) 2px,
+      rgba(0,0,0,0.10) 3px,
+      rgba(0,0,0,0.00) 4px
+    );
+    z-index: 50;
+  }
+  header {
+    text-align: center;
+    padding: 48px 16px 8px;
+    position: relative;
+  }
+  #bonfire {
+    image-rendering: pixelated;
+    width: 96px;
+    height: auto;
+    display: block;
+    margin: 0 auto 10px;
+    filter: drop-shadow(0 0 18px rgba(255,122,47,0.45));
+  }
+  h1 {
+    font-size: clamp(20px, 4vw, 34px);
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    font-weight: bold;
+    color: var(--text);
+    text-shadow: 3px 3px 0 #000, 0 0 24px rgba(255,122,47,0.25);
+  }
+  .subtitle {
+    margin-top: 10px;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    font-size: 12px;
+    color: var(--ember-soft);
+    text-shadow: 2px 2px 0 #000;
+  }
+  .rule {
+    width: min(560px, 80%);
+    height: 2px;
+    margin: 26px auto 0;
+    background: linear-gradient(to right, transparent, var(--card-edge) 20%, var(--gold) 50%, var(--card-edge) 80%, transparent);
+  }
+  main {
+    max-width: 1080px;
+    margin: 34px auto 0;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 26px;
+  }
+  .card {
+    background: linear-gradient(to bottom, #221b2b, var(--card) 40%, #151019);
+    border: 2px solid var(--card-edge);
+    box-shadow: 0 0 0 2px #000, 0 10px 30px rgba(0,0,0,0.6);
+    padding: 22px 16px 18px;
+    text-align: center;
+    position: relative;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    border-color: var(--ember);
+    box-shadow: 0 0 0 2px #000, 0 14px 34px rgba(0,0,0,0.7), 0 0 26px rgba(255,122,47,0.18);
+  }
+  .card canvas {
+    image-rendering: pixelated;
+    width: 168px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
+  .nameplate {
+    margin-top: 14px;
+    padding: 8px 10px 7px;
+    background: #0e0b12;
+    border: 2px solid var(--card-edge);
+    box-shadow: inset 0 0 0 2px #000;
+  }
+  .char-name {
+    font-size: 15px;
+    font-weight: bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-shadow: 2px 2px 0 #000;
+    line-height: 1.35;
+  }
+  .char-name s {
+    color: var(--text-dim);
+    text-decoration-color: var(--ember);
+  }
+  .char-class {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--text);
+    letter-spacing: 0.05em;
+  }
+  .char-meta {
+    margin-top: 5px;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  footer {
+    text-align: center;
+    margin-top: 64px;
+    padding-bottom: 72px;
+    font-size: 16px;
+    font-weight: bold;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--ember-soft);
+    text-shadow: 2px 2px 0 #000, 0 0 18px rgba(255,122,47,0.35);
+  }
+  .ember-particle {
+    position: fixed;
+    bottom: -10px;
+    width: 3px;
+    height: 3px;
+    background: var(--ember);
+    box-shadow: 0 0 6px 1px rgba(255,122,47,0.8);
+    border-radius: 0;
+    pointer-events: none;
+    animation: floatUp linear infinite;
+    z-index: 40;
+  }
+  @keyframes floatUp {
+    0%   { transform: translate(0, 0); opacity: 0; }
+    8%   { opacity: 0.9; }
+    60%  { opacity: 0.7; }
+    100% { transform: translate(var(--driftX), -105vh); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <canvas id="bonfire" width="24" height="24" aria-label="Bonfire"></canvas>
+  <h1>Re-link the Fire</h1>
+  <div class="subtitle">The Party &nbsp;·&nbsp; Level 8</div>
+  <div class="rule"></div>
+</header>
+
+<main id="party"></main>
+
+<footer>Don't you dare go hollow</footer>
+
+<script>
+// ---------------------------------------------------------------------------
+// Sprite data. Each sprite is a 24-wide grid of palette keys; '.' = empty.
+// hipRow marks where the idle-bob offset stops (legs stay planted).
+// ---------------------------------------------------------------------------
+
+const CHARACTERS = [
+
+// ========================= ATHELSTAN — Paladin ============================
+{
+  name: "Athelstan",
+  klass: "Paladin · Oath of Devotion",
+  player: "Jinxan",
+  hipRow: 20,
+  palette: {
+    K: "#2b2b38", G: "#d2d3dc", g: "#a0a2b4", S: "#e7bc93", E: "#2e2e46",
+    A: "#c6cdd9", a: "#8d97a9", B: "#4166c9", b: "#2c4487", Y: "#e5c052",
+    W: "#eef1f6", w: "#bac4d1", X: "#e2e8ef", h: "#74502e"
+  },
+  grid: [
+    "........................",
+    ".........KKKKKK.........",
+    "........KGGGGGGK........",
+    ".......KGGGGGGGGK.......",
+    "......KgKSSSSSSKgK......",
+    "......KgKSESSESKgK......",
+    "......KgKSSSSSSKgK......",
+    "......KgKSGGGGSKgK..X...",
+    "......KgKGGGGGGKgK..X...",
+    "......KggKGGGGKggK..X...",
+    ".......KgKGGGGKgK...X...",
+    "........K.KGGK.K....X...",
+    "....KKKKKKKKKKKKKK..X...",
+    "...KAAKKABBBBAKKAAK.X...",
+    "..KWWWKKBBBBBBKKAAK.X...",
+    ".KWWYWWKKBYYBBKKAAKYYY..",
+    ".KWYYYWK.KBBBBK.KSShK...",
+    ".KWWYWWK.KBBBBK.KSShK...",
+    ".KWWWWWK.KaBBaK...KYK...",
+    "..KWWWK.KabBBbaK........",
+    "...KKK..KaKBBKaK........",
+    "........KAKbbKAK........",
+    "........KAK..KAK........",
+    "........KAK..KAK........",
+    "........KaK..KaK........",
+    ".......KAAK..KAAK.......",
+    ".......KKKK..KKKK.......",
+    "........................",
+    "........................"
+  ]
+},
+
+// ============== DR YAROS PERRY — Sorcerer / Warlock =======================
+{
+  name: "Dr Yaros Perry of the Cascade Circle",
+  klass: "Sorcerer / Warlock · Wild Magic / The Fathomless",
+  player: "AnnaCai",
+  hipRow: 20,
+  palette: {
+    K: "#23222c", H: "#26262e", h: "#3b3b46", S: "#b5764a", s: "#93582f",
+    U: "#e9e5d8", u: "#c9c2ae", E: "#4a4a38", O: "#3a3226",
+    C: "#8a97a8", c: "#5d6779", D: "#3a3f4a", d: "#2b2f38",
+    L: "#3b57c9", M: "#4a7dff", m: "#2748c0", W: "#bcd6ff"
+  },
+  grid: [
+    "........................",
+    ".........KKKKKK.........",
+    "........KHHHHHHK........",
+    ".......KHHHHHHHHK.......",
+    "......KHHHHKSSSSK.......",
+    "......KHHHKUSSESK.......",
+    "......KHKUOUSSSSK.......",
+    "......KHKUUUSSSSK.......",
+    "......KHKUuUSsSK........",
+    ".......KKUUUSSK.........",
+    "........KuKKsK..........",
+    ".........KKKK...........",
+    "....KKKKKKKKKKKKKK......",
+    "...KCCKKDDDDDDKKCCK.....",
+    "...KCCK.KDdDdK..KCCK....",
+    "...KCcK.KDDDDK..KCCK....",
+    "...KCcK.KDdDdK.KMMWMK...",
+    "...KCcK.KDDDDK.KMWWMK...",
+    "...KSSK.KLLLLK.KMMMmK...",
+    "....KK..KDDDDK..KmmK....",
+    ".......KCcDDcCK...M.....",
+    ".......KCKDDKCK.........",
+    ".......KcKddKcK...M.....",
+    "........KdK.KdK.........",
+    "........KdK.KdK.........",
+    "........KdK.KdK.........",
+    ".......KddK.KddK........",
+    ".......KKKK.KKKK........",
+    "........................",
+    "........................"
+  ]
+},
+
+// ============ GREGORIC ZWIEBELBRUDER — Barbarian (Onion Knight) ===========
+{
+  name: "Gregoric Zwiebelbruder",
+  klass: "Barbarian · Path of the Berserker",
+  player: "BushtuckerTrial",
+  hipRow: 20,
+  palette: {
+    K: "#26303e", A: "#c6d2e2", a: "#94a4bc", d: "#5c6c88",
+    V: "#141a24", X: "#b9c4d2", x: "#8b97a8", h: "#7a5230", H: "#5c3b20"
+  },
+  grid: [
+    "............KK..........",
+    ".KKKK......KAK..........",
+    "KXXXXK....KAAK..........",
+    "KXXXXK..KKAAAAKK........",
+    ".KXXK.KKAaAAAAaAKK......",
+    "..KXK.KAAaAAAAAAaAAK....",
+    "..KhKAAaAAAAAAAAaAAK....",
+    "..KhKAAVVVVVVVVVVAAK....",
+    "..KhKAAaAAAAAAAAaAAK....",
+    "..Kh.KAaAAAAAAAAaAK.....",
+    "..Kh..KKAaAAAAaAKK......",
+    "..Kh....KKKKKKKK........",
+    "..KhKKKKKKKKKKKKKKKK....",
+    "..KhKAAAKKaAAaKKAAAK....",
+    "..KhKAAAKKAAAAKKAAAK....",
+    "..KhKAAAKKAAAAKKAAAK....",
+    "..Kh.KAAKKAaaAKKAAK.....",
+    "..Kh.KSSKKAAAAKKSSK.....",
+    "..KK..KK.KAAAAK.KK......",
+    ".........KAAAAK.........",
+    ".........KddddK.........",
+    "........KAAKKAAK........",
+    "........KAAKKAAK........",
+    "........KaK..KaK........",
+    "........KaK..KaK........",
+    ".......KAAK..KAAK.......",
+    ".......KKKK..KKKK.......",
+    "........................",
+    "........................"
+  ]
+},
+
+// ==================== KEVIN THE GHOST — Rogue =============================
+{
+  name: "Kevin the <s>Ghost</s> God",
+  klass: "Rogue · Assassin",
+  player: "Cerberus_Black",
+  hipRow: 20,
+  palette: {
+    K: "#15161c", H: "#23262e", h: "#343945", S: "#e7bc93", s: "#c2946a",
+    F: "#1c1e26", E: "#d8dce4", C: "#2c303a", c: "#232630",
+    B: "#1e2128", D: "#aab4c4", d: "#6b7484", G: "#7f8ba0",
+    Y: "#e5c052", y: "#b8923a"
+  },
+  grid: [
+    ".........yYYYYy.........",
+    "........................",
+    ".........KKHHKK.........",
+    "........KHHHHHHK........",
+    ".......KHHHHHHHHK.......",
+    "......KHHFFFFFFHHK......",
+    "......KHFSESSESFHK......",
+    "......KHFSSSSSSFHK......",
+    "......KHFsSSSSsFHK......",
+    ".......KFFssssFFK.......",
+    "........KCCCCCCK........",
+    ".........KCCCCK.........",
+    "....KKKKKKKKKKKKKK......",
+    "...KCCKKBBBBBBKKCCK.....",
+    "...KCCK.KBGBBK..KCCK....",
+    "...KCcK.KBBBBK..KCcK....",
+    "...KCcK.KBGBBK..KCcK....",
+    "...KSSK.KBBBBK..KSSK....",
+    "....KDK.KBBBBK..KDK.....",
+    "....KDK.KcBBcK..KDK.....",
+    "....KdK.KBKKBK..KdK.....",
+    ".....K..KBKKBK...K......",
+    "........KcK.KcK.........",
+    "........KBK.KBK.........",
+    "........KBK.KBK.........",
+    "........KcK.KcK.........",
+    ".......KBBK.KBBK........",
+    ".......KKKK.KKKK........",
+    "........................",
+    "........................"
+  ]
+},
+
+// ===================== MARSHAL — Artificer ================================
+{
+  name: "Marshal",
+  klass: "Artificer · Armorer",
+  player: "Battlefrost",
+  hipRow: 20,
+  palette: {
+    K: "#181a20", B: "#23252e", b: "#33364a", N: "#5c6b3c", n: "#7d8f55",
+    V: "#0c0e14", v: "#2de0c8", Y: "#d9b64a", P: "#8a4ad9", p: "#b784ff",
+    W: "#e6d9ff"
+  },
+  grid: [
+    "........................",
+    "..........KKKK..........",
+    ".........KBBBBK.........",
+    "........KBBBBBBK........",
+    ".......KBBBBBBBBK.......",
+    "......KBBKVVVVKBBK......",
+    "......KBKVVvvVVKBK......",
+    "......KBKVVVVVVKBK......",
+    "......KBKVVVVVVKBK......",
+    ".......KKVVVVKK.........",
+    "........KBBBBK..........",
+    ".........KKKK...........",
+    "....KKKKKKKKKKKKKK......",
+    "...KNNKKBBBBBBKKNNK.....",
+    "...KNnK.KYBBYK..KNnK....",
+    "...KNnK.KBYYBK..KNnK....",
+    "...KNnK.KbBBbK.KPpPK....",
+    "...KNnK.KBBBBK.KpWpK....",
+    "...KNNK.KPPPPK.KPpPK....",
+    "....KK..KBBBBK..KPK.....",
+    ".......KBbBBbBK.........",
+    ".......KBKBBKBK.........",
+    ".......KbKBBKbK.........",
+    "........KBK.KBK.........",
+    "........KNK.KNK.........",
+    "........KBK.KBK.........",
+    ".......KBBK.KBBK........",
+    ".......KKKK.KKKK........",
+    "........................",
+    "........................"
+  ]
+},
+
+// ================= OBADIAH POSTLETHWAITE — Bard ===========================
+{
+  name: "Obadiah Postlethwaite",
+  klass: "Bard · College of Valor",
+  player: "Khalik",
+  hipRow: 20,
+  palette: {
+    K: "#2a2530", G: "#b8b8c0", g: "#8e8e9a", S: "#d8a578", s: "#b5825a",
+    E: "#3a3648", D: "#5a3040", d: "#41222e", A: "#aab2c0", a: "#7c8494",
+    L: "#7a5230", U: "#a06a34", u: "#c99054", Y: "#e5c052", h: "#5c3b20"
+  },
+  grid: [
+    "........................",
+    "........................",
+    ".........KKKKKK.........",
+    "........KgGGGGgK........",
+    ".......KGSSSSSSGK.......",
+    "......KKSgSSSSgSKK......",
+    ".....KSKSESSSSESKSK.....",
+    ".....KSKsSSSSSSsKSK.....",
+    "......KKSSssssSSKK......",
+    ".......KsSSddSSsK.......",
+    "........KSssssSK........",
+    ".........KKKK......KYK..",
+    "....KKKKKKKKKKKKKKKKuK..",
+    "....KAAAKKDDDDKKAAAKuK..",
+    "....KDDK.KDDDDK.KDDKuK..",
+    "....KDdK.KDYYDK.KUuUuK..",
+    "....KDdK.KDDDDK.KuKuUK..",
+    "....KSSK.KDDDDK.KUuUK...",
+    ".....KK..KLLLLK..KKK....",
+    "........KdDDDDdK........",
+    "........KDKDDKDK........",
+    "........KdKddKdK........",
+    "........KdK..KdK........",
+    "........KdK..KdK........",
+    "........KLK..KLK........",
+    ".......KLLK..KLLK.......",
+    ".......KKKK..KKKK.......",
+    "........................",
+    "........................"
+  ]
+}
+];
+
+// ---------------------------------------------------------------------------
+// Bonfire sprite (2 animation frames)
+// ---------------------------------------------------------------------------
+const BONFIRE_PAL = {
+  K: "#1a1216", S: "#8a8a96", s: "#5c5c68", h: "#4a3524",
+  R: "#ff5a1f", O: "#ff9d2f", Y: "#ffd76b", W: "#fff3c4", C: "#3a2a20"
+};
+const BONFIRE_FRAMES = [
+  [
+    "........................",
+    "...........SS...........",
+    "...........SS...........",
+    "..........KSSK..........",
+    "...........SS...........",
+    "...........SS......Y....",
+    ".....Y.....SS...........",
+    "...........SS...........",
+    ".........Y.SS..Y........",
+    "..........RSSR..........",
+    ".........RRSSRR.........",
+    ".........ROSSOR.........",
+    "........RROYYORR........",
+    "........ROYYYYOR........",
+    ".......RROYWWYORR.......",
+    ".......ROYWWWWYOR.......",
+    "......RROYWWWWYORR......",
+    "......hChhCCChhCh.......",
+    ".....hhChhhhhhhChh......",
+    "....hCChhhhhhhhCChh.....",
+    "........................",
+    "........................",
+    "........................",
+    "........................"
+  ],
+  [
+    "........................",
+    "...........SS...........",
+    "...........SS...........",
+    "..........KSSK..........",
+    "...........SS...........",
+    ".....Y.....SS...........",
+    "...........SS...Y.......",
+    "...........SS...........",
+    "..........RSSR.Y........",
+    ".........RRSSRR.........",
+    ".........ROSSOR.........",
+    "........RROSSORR........",
+    "........ROYYYYOR........",
+    ".......RROYWYYORR.......",
+    ".......ROYWWWYYOR.......",
+    "......RROYWWWWYORR......",
+    "......RROYWWWYYORR......",
+    "......hChhCCChhCh.......",
+    ".....hhChhhhhhhChh......",
+    "....hCChhhhhhhhCChh.....",
+    "........................",
+    "........................",
+    "........................",
+    "........................"
+  ]
+];
+
+// ---------------------------------------------------------------------------
+// Renderer
+// ---------------------------------------------------------------------------
+const W = 24, H = 30;
+
+function drawGrid(ctx, grid, palette, yOffsets) {
+  for (let y = 0; y < grid.length; y++) {
+    const row = grid[y];
+    const dy = yOffsets ? yOffsets(y) : 0;
+    for (let x = 0; x < row.length && x < W; x++) {
+      const key = row[x];
+      if (key === ".") continue;
+      const color = palette[key];
+      if (!color) continue;
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y + dy, 1, 1);
+    }
+  }
+}
+
+function renderCharacter(canvas, ch, frame) {
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, W, H);
+  // ground shadow
+  ctx.fillStyle = "rgba(0,0,0,0.45)";
+  ctx.fillRect(7, 27, 10, 1);
+  ctx.fillRect(9, 28, 6, 1);
+  // idle bob: on frame 1, everything above the hips shifts down one pixel
+  const offsets = frame === 1
+    ? (y) => (y < ch.hipRow ? 1 : 0)
+    : null;
+  drawGrid(ctx, ch.grid, ch.palette, offsets);
+}
+
+function renderBonfire(canvas, frame) {
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, 24, 24);
+  drawGrid(ctx, BONFIRE_FRAMES[frame], BONFIRE_PAL, null);
+}
+
+// ---------------------------------------------------------------------------
+// Build the page
+// ---------------------------------------------------------------------------
+const main = document.getElementById("party");
+const charCanvases = [];
+
+for (const ch of CHARACTERS) {
+  // sanity check grid rows while developing
+  ch.grid.forEach((row, i) => {
+    if (row.length !== W) console.warn(`${ch.name} row ${i} has length ${row.length}`);
+  });
+
+  const card = document.createElement("div");
+  card.className = "card";
+
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  canvas.setAttribute("aria-label", ch.name.replace(/<[^>]+>/g, ""));
+  card.appendChild(canvas);
+
+  const plate = document.createElement("div");
+  plate.className = "nameplate";
+  plate.innerHTML =
+    `<div class="char-name">${ch.name}</div>` +
+    `<div class="char-class">${ch.klass}</div>` +
+    `<div class="char-meta">Lvl 8 · Human · ${ch.player}</div>`;
+  card.appendChild(plate);
+
+  main.appendChild(card);
+  charCanvases.push({ canvas, ch });
+}
+
+const bonfireCanvas = document.getElementById("bonfire");
+let frame = 0;
+function tick() {
+  for (const { canvas, ch } of charCanvases) renderCharacter(canvas, ch, frame);
+  renderBonfire(bonfireCanvas, frame);
+  frame = 1 - frame;
+}
+tick();
+setInterval(tick, 480);
+
+// floating embers
+for (let i = 0; i < 14; i++) {
+  const e = document.createElement("div");
+  e.className = "ember-particle";
+  e.style.left = Math.random() * 100 + "vw";
+  e.style.setProperty("--driftX", (Math.random() * 120 - 60) + "px");
+  e.style.animationDuration = 6 + Math.random() * 9 + "s";
+  e.style.animationDelay = -Math.random() * 12 + "s";
+  document.body.appendChild(e);
+}
+</script>
+</body>
+</html>
