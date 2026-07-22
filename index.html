@@ -195,7 +195,7 @@
 </head>
 <body>
 
-<audio id="bgm" src="firelink-shrine.mp3" loop preload="auto"></audio>
+<audio id="bgm" src="firelink-shrine.m4a" loop preload="auto"></audio>
 <button id="bgm-toggle" aria-label="Toggle music">♪ Sound off</button>
 
 <header>
@@ -650,12 +650,19 @@ bgmToggle.addEventListener("click", (e) => {
   e.stopPropagation();
   if (bgm.paused) { tryPlayBgm(); } else { bgm.pause(); updateBgmLabel(); }
 });
-const bgmKickstart = () => {
-  if (bgm.paused) tryPlayBgm();
-  window.removeEventListener("pointerdown", bgmKickstart);
-  window.removeEventListener("keydown", bgmKickstart);
+// mobile browsers only allow audio to start from a completed gesture
+// (pointerup/keydown), and only once a play() attempt succeeds do we
+// stop listening
+const bgmKickstart = async () => {
+  if (!bgm.paused) return;
+  try {
+    await bgm.play();
+    window.removeEventListener("pointerup", bgmKickstart);
+    window.removeEventListener("keydown", bgmKickstart);
+  } catch (e) { /* still blocked — keep listening */ }
+  updateBgmLabel();
 };
-window.addEventListener("pointerdown", bgmKickstart);
+window.addEventListener("pointerup", bgmKickstart);
 window.addEventListener("keydown", bgmKickstart);
 tryPlayBgm();
 
