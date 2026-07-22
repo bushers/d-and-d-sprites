@@ -152,6 +152,66 @@
     color: var(--ember-soft);
     text-shadow: 2px 2px 0 #000, 0 0 18px rgba(255,122,47,0.35);
   }
+  #splash {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background:
+      radial-gradient(ellipse 70% 45% at 50% 60%, #1c1420 0%, transparent 70%),
+      var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 34px;
+    transition: opacity 1s ease;
+  }
+  #splash.fade {
+    opacity: 0;
+    pointer-events: none;
+  }
+  #splash canvas {
+    image-rendering: pixelated;
+    width: 144px;
+    height: auto;
+    filter: drop-shadow(0 0 18px rgba(255,122,47,0.0));
+    transition: filter 0.6s ease;
+  }
+  #splash.lit canvas {
+    filter: drop-shadow(0 0 22px rgba(255,122,47,0.55));
+  }
+  #relink-btn {
+    background: #0e0b12;
+    border: 2px solid var(--card-edge);
+    box-shadow: 0 0 0 2px #000;
+    color: var(--ember-soft);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: bold;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    padding: 16px 26px;
+    cursor: pointer;
+    animation: btnPulse 2.2s ease-in-out infinite;
+  }
+  #relink-btn:hover {
+    border-color: var(--ember);
+    color: var(--text);
+  }
+  @keyframes btnPulse {
+    0%, 100% { text-shadow: 0 0 0 rgba(255,176,102,0); }
+    50%      { text-shadow: 0 0 14px rgba(255,176,102,0.75); }
+  }
+  body.pre .card {
+    opacity: 0;
+  }
+  .card.reveal {
+    animation: cardIn 0.55s ease backwards;
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
   #bgm-toggle {
     position: fixed;
     top: 14px;
@@ -197,6 +257,11 @@
 
 <audio id="bgm" src="firelink-shrine.m4a" loop preload="auto"></audio>
 <button id="bgm-toggle" aria-label="Toggle music">♪ Sound off</button>
+
+<div id="splash">
+  <canvas id="splash-bonfire" width="24" height="24" aria-hidden="true"></canvas>
+  <button id="relink-btn">Press to re-link the fire</button>
+</div>
 
 <header>
   <canvas id="bonfire" width="24" height="24" aria-label="Bonfire"></canvas>
@@ -664,7 +729,43 @@ const bgmKickstart = async () => {
 };
 window.addEventListener("pointerup", bgmKickstart);
 window.addEventListener("keydown", bgmKickstart);
-tryPlayBgm();
+
+// ---------------------------------------------------------------------------
+// Title screen: an unlit bonfire until the fire is re-linked
+// ---------------------------------------------------------------------------
+const splash = document.getElementById("splash");
+const splashBonfire = document.getElementById("splash-bonfire");
+const relinkBtn = document.getElementById("relink-btn");
+
+// omitting the flame/ember colors leaves just the coiled sword and coals
+const UNLIT_PAL = { K: BONFIRE_PAL.K, S: BONFIRE_PAL.S, s: BONFIRE_PAL.s,
+                    h: BONFIRE_PAL.h, C: BONFIRE_PAL.C };
+drawGrid(splashBonfire.getContext("2d"), BONFIRE_FRAMES[0], UNLIT_PAL, null);
+
+document.body.classList.add("pre");
+document.body.style.overflow = "hidden";
+
+relinkBtn.addEventListener("click", () => {
+  relinkBtn.disabled = true;
+  tryPlayBgm();
+  // light the fire
+  splash.classList.add("lit");
+  renderBonfire(splashBonfire, 0);
+  const splashFlicker = setInterval(
+    () => renderBonfire(splashBonfire, Math.random() < 0.5 ? 0 : 1), 240);
+  setTimeout(() => clearInterval(splashFlicker), 1900);
+  // let it burn for a beat, then fade through to the party
+  setTimeout(() => {
+    splash.classList.add("fade");
+    document.body.classList.remove("pre");
+    document.body.style.overflow = "";
+    document.querySelectorAll("main .card").forEach((card, i) => {
+      card.style.animationDelay = (i * 110) + "ms";
+      card.classList.add("reveal");
+    });
+  }, 700);
+  setTimeout(() => splash.remove(), 1900);
+});
 
 // floating embers
 for (let i = 0; i < 14; i++) {
